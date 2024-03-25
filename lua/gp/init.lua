@@ -258,6 +258,9 @@ _H.process = function(buf, cmd, args, callback, out_reader, err_reader)
 		M.remove_handle(pid)
 	end))
 
+    M.info("spawning command: "..cmd)
+    -- print("with args: ")
+    vim.print(args)
 	handle, pid = vim.loop.spawn(cmd, {
 		args = args,
 		stdio = { nil, stdout, stderr },
@@ -753,14 +756,17 @@ M.setup = function(opts)
 			if tbl == "hooks" then
 				M[tbl][k] = v
 			elseif tbl == "providers" then
+                -- print("Adding provider"..k)
 				M[tbl][k] = M[tbl][k] or {}
 				for pk, pv in pairs(v) do
 					M[tbl][k][pk] = pv
 				end
 				if next(v) == nil then
+                    print("removing provider"..k)
 					M[tbl][k] = nil
 				end
 			elseif tbl == "agents" or tbl == "image_agents" then
+                print("Adding agent"..v.name)
 				M[tbl][v.name] = v
 			end
 		end
@@ -810,6 +816,7 @@ M.setup = function(opts)
 	-- remove invalid agents
 	for name, agent in pairs(M.agents) do
 		if type(agent) ~= "table" or not agent.model or not agent.system_prompt then
+            print("Removing agent"..name)
 			M.agents[name] = nil
 		end
 	end
@@ -843,6 +850,7 @@ M.setup = function(opts)
 				table.insert(M._chat_agents, name)
 			end
 		else
+            print("could not find provider" ..M.agents[name].provider)
 			M.agents[name] = nil
 		end
 	end
@@ -3179,15 +3187,18 @@ M.Whisper = function(callback)
 		},
 		arecord = {
 			cmd = "arecord",
+            -- arecord -D "plughw:2,0" -c1 "-f" "S16_LE" "-r" "48000" "/tmp/gp_whisper/rec.wav" 
+
 			opts = {
+                "-D"
+                , "plughw:2,0",
 				"-c",
 				"1",
 				"-f",
 				"S16_LE",
 				"-r",
 				"48000",
-				"-d",
-				3600,
+				"-d", 3600,
 				"rec.wav",
 			},
 			exit_code = 1,
@@ -3304,7 +3315,8 @@ M.Whisper = function(callback)
 			.. " && "
 			-- call openai
 			.. curl
-			.. " --max-time 20 https://api.openai.com/v1/audio/transcriptions -s "
+			.. " --max-time 20 http://localhost:11111/v1/audio/transcriptions -s "
+			-- .. " --max-time 20 https://api.openai.com/v1/audio/transcriptions -s "
 			.. '-H "Authorization: Bearer '
 			.. M.config.openai_api_key
 			.. '" -H "Content-Type: multipart/form-data" '
@@ -3312,6 +3324,7 @@ M.Whisper = function(callback)
 			.. M.config.whisper_language
 			.. '" -F file="@final.mp3" '
 			.. '-F response_format="json"'
+        -- print(cmd)
 
 		M._H.process(nil, "bash", { "-c", cmd }, function(code, signal, stdout, _)
 			if code ~= 0 then
@@ -3342,6 +3355,7 @@ M.Whisper = function(callback)
 
 	local rec_cmd = M.config.whisper_rec_cmd
 	-- if rec_cmd not set explicitly, try to autodetect
+    print("initial rec_cmd=", rec_cmd)
 	if not rec_cmd then
 		rec_cmd = "sox"
 		if vim.fn.executable("ffmpeg") == 1 then
@@ -3354,6 +3368,7 @@ M.Whisper = function(callback)
 		if vim.fn.executable("arecord") == 1 then
 			rec_cmd = "arecord"
 		end
+        print("initial rec_cmd="..rec_cmd)
 	end
 
 	if type(rec_cmd) == "table" and rec_cmd[1] and rec_options[rec_cmd[1]] then
@@ -3368,6 +3383,7 @@ M.Whisper = function(callback)
 		close()
 		return
 	end
+    print("using rec_cmd="..rec_cmd)
 	for i, v in ipairs(cmd.opts) do
 		if v == "rec.wav" then
 			cmd.opts[i] = rec_file

@@ -762,11 +762,11 @@ M.setup = function(opts)
 					M[tbl][k][pk] = pv
 				end
 				if next(v) == nil then
-                    print("removing provider"..k)
+                    M.info("removing provider"..k)
 					M[tbl][k] = nil
 				end
 			elseif tbl == "agents" or tbl == "image_agents" then
-                print("Adding agent"..v.name)
+                -- print("Adding agent"..v.name)
 				M[tbl][v.name] = v
 			end
 		end
@@ -816,7 +816,7 @@ M.setup = function(opts)
 	-- remove invalid agents
 	for name, agent in pairs(M.agents) do
 		if type(agent) ~= "table" or not agent.model or not agent.system_prompt then
-            print("Removing agent"..name)
+            M.info("Removing agent"..name)
 			M.agents[name] = nil
 		end
 	end
@@ -850,7 +850,7 @@ M.setup = function(opts)
 				table.insert(M._chat_agents, name)
 			end
 		else
-            print("could not find provider" ..M.agents[name].provider)
+            M.info("could not find provider" ..M.agents[name].provider)
 			M.agents[name] = nil
 		end
 	end

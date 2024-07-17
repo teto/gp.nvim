@@ -5,6 +5,11 @@
 -- Default config
 --------------------------------------------------------------------------------
 
+---@type GPTConfig
+
+---@class GPTProvider
+
+---@class GPTConfig haskell-tools.nvim plugin configuration.
 local config = {
 	-- Please start with minimal config possible.
 	-- Just openai_api_key if you don't have OPENAI_API_KEY env set up.
@@ -20,6 +25,7 @@ local config = {
 
 	-- at least one working provider is required
 	-- to disable a provider set it to empty table like openai = {}
+	---@type GPTProvider[]
 	providers = {
 		-- secrets can be strings or tables with command and arguments
 		-- secret = { "cat", "path_to/openai_api_key" },
